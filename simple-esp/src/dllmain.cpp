@@ -195,15 +195,11 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD reason, LPVOID lpReserved)
 	switch (reason)
 	{
 		case DLL_PROCESS_ATTACH:
-		{
 			MH_Initialize();
 			MH_CreateHook(glOrtho, hk_glOrtho, reinterpret_cast<void**>(&fn_glOrtho));
 			MH_CreateHook(glScalef, hk_glScalef, reinterpret_cast<void**>(&fn_glScalef));
 			MH_CreateHook(glTranslatef, hk_glTranslatef, reinterpret_cast<void**>(&fn_glTranslatef));
 			return MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
-		}
-
-		break;
 
 		case DLL_PROCESS_DETACH:
 			MH_Uninitialize();
