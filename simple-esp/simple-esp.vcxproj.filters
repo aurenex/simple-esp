@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\dllmain.cpp">
+    <ClCompile Include="src\dllmain\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="third-party\minhook\src\hde\hde32.c">
@@ -35,7 +35,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="third-party\minhook\include\MinHook.h">
+    <ClInclude Include="third-party\minhook\include\minhook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third-party\minhook\src\hde\hde32.h">

@@ -2,14 +2,17 @@
 #include <list>
 
 #include <gl/GL.h>
-#pragma comment(lib, "OpenGL32.lib")
+#pragma comment(lib, "opengl32")
 
-// Library for hooking functions
-#include "minhook/include/MinHook.h"
+#include "minhook/include/minhook.h"
 
-// Library for mathematical calculations
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
+
+// Pointers to original functions
+decltype(&glOrtho) fn_glOrtho = &glOrtho;
+decltype(&glScalef) fn_glScalef = &glScalef;
+decltype(&glTranslatef) fn_glTranslatef = &glTranslatef;
 
 struct Object
 {
@@ -35,14 +38,11 @@ struct Object
 
 std::list<Object> objects;
 
-// Pointers to original functions
-decltype(&glOrtho) fn_glOrtho = glOrtho;
-decltype(&glScalef) fn_glScalef = glScalef;
-decltype(&glTranslatef) fn_glTranslatef = glTranslatef;
-
+// This function draws a 3D box outline from the current
+// coordinates with offsets of -1 and 1 in each dimension
 void drawBox(glm::vec4 color)
 {
-	glColor4f(color.r, color.g, color.b, color.a);
+	glColor4fv(glm::value_ptr(color));
 	
 	glBegin(GL_LINES);
 	{
@@ -86,13 +86,28 @@ void drawBox(glm::vec4 color)
 }
 
 // Hooked glOrtho function
-void WINAPI hk_glOrtho(double left, double right, double bottom, double top, double zNear, double zFar)
+void WINAPI hk_glOrtho(
+	GLdouble left, GLdouble right,
+	GLdouble bottom, GLdouble top,
+	GLdouble zNear, GLdouble zFar)
 {
-	// Probably game preparing to draw inventory
+	// Calling the original glOrtho function
+	fn_glOrtho(left, right, bottom, top, zNear, zFar);
+
+	// Called at the beginning of the GUI rendering
 	if (zNear == 1000.0 and zFar == 3000.0)
 	{
-		// Saving settings (context and current matrix)
+		if (objects.empty())
+			return;
+
+		// Saving all attributes
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
+		
+		// Saving matrices
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+
+		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 
 		// Setting up the context
@@ -107,7 +122,6 @@ void WINAPI hk_glOrtho(double left, double right, double bottom, double top, dou
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Transforming matrices
 		for (auto& object : objects)
 		{
 			glm::mat4& modelview = object.m_modelview;
@@ -138,6 +152,7 @@ void WINAPI hk_glOrtho(double left, double right, double bottom, double top, dou
 				break;
 			}
 
+			// Transforming matrices (shifting a point to the center of object)
 			modelview = glm::translate(modelview, translate);
 			modelview = glm::scale(modelview, scale);
 
@@ -148,61 +163,66 @@ void WINAPI hk_glOrtho(double left, double right, double bottom, double top, dou
 			glMatrixMode(GL_MODELVIEW);
 			glLoadMatrixf(glm::value_ptr(modelview));
 
-			// Drawing box
+			// Drawing a box from the current coordinates (matrixes)
 			drawBox(color);
 		}
 
 		objects.clear();
 
-		// Restoring settings (context and matrix)
-		glPopAttrib();
+		// Restoring matrices
+		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
-	}
 
-	// Calling the original function
-	fn_glOrtho(left, right, bottom, top, zNear, zFar);
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+
+		// Restoring all attributes
+		glPopAttrib();
+	}
 }
 
 // Hooked glScalef function
-void WINAPI hk_glScalef(float x, float y, float z)
+void WINAPI hk_glScalef(GLfloat x, GLfloat y, GLfloat z)
 {
-	// Probably game preparing to draw entity (player, villager or witch)
+	// Called at the beginning of drawing an entity (player, villager, witch)
 	if (x == 0.9375f and y == 0.9375f and z == 0.9375f)
-		objects.push_back(Object::Entity);
+		objects.emplace_back(Object::Entity);
 
-	// Calling the original function
+	// Calling the original glScalef function
 	fn_glScalef(x, y, z);
 }
 
 // Hooked glTranslatef function
-void WINAPI hk_glTranslatef(float x, float y, float z)
+void WINAPI hk_glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
-	// Probably game preparing to draw chest
+	// Called at the beginning of drawing a chest or ender chest
 	if (x == 0.5f and y == 0.4375f and z == 0.9375f)
-		objects.push_back(Object::Chest);
+		objects.emplace_back(Object::Chest);
 
-	// Probably game preparing to draw large chest
-	if (x == 1.0f and y == 0.4375f and z == 0.9375f)
-		objects.push_back(Object::LargeChest);
+	// Called at the beginning of drawing a large chest
+	else if (x == 1.0f and y == 0.4375f and z == 0.9375f)
+		objects.emplace_back(Object::LargeChest);
 
-	// Calling the original function
+	// Calling the original glTranslatef function
 	fn_glTranslatef(x, y, z);
 }
 
-// Dynamic Link Library entry point
-BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD reason, LPVOID lpReserved)
+BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpReserved)
 {
-	switch (reason)
+	switch (fdwReason)
 	{
-		case DLL_PROCESS_ATTACH:
-			MH_Initialize();
-			MH_CreateHook(glOrtho, hk_glOrtho, reinterpret_cast<void**>(&fn_glOrtho));
-			MH_CreateHook(glScalef, hk_glScalef, reinterpret_cast<void**>(&fn_glScalef));
-			MH_CreateHook(glTranslatef, hk_glTranslatef, reinterpret_cast<void**>(&fn_glTranslatef));
-			return MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
+	case DLL_PROCESS_ATTACH:
+		MH_Initialize();
+		MH_CreateHook(&glOrtho, &hk_glOrtho,
+			reinterpret_cast<void**>(&fn_glOrtho));
+		MH_CreateHook(&glScalef, &hk_glScalef,
+			reinterpret_cast<void**>(&fn_glScalef));
+		MH_CreateHook(&glTranslatef, &hk_glTranslatef,
+			reinterpret_cast<void**>(&fn_glTranslatef));
+		return MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
 
-		case DLL_PROCESS_DETACH:
-			MH_Uninitialize();
+	case DLL_PROCESS_DETACH:
+		MH_Uninitialize();
 	}
 
 	return TRUE;
