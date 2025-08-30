@@ -49,8 +49,6 @@ Function names, as well as unique parameters, can be obtained by viewing the dec
 - Select the target platform.
 - Press `ctrl + shift + b` to compile.
 
-All compiled open-source releases available in our telegram [channel][tg-channel-link].
-
 ### Usage
 - Open any DLL-injector **as administrator**.
 - Find the **java minecraft** process.
@@ -59,7 +57,6 @@ All compiled open-source releases available in our telegram [channel][tg-channel
 Before use, we strongly recommend that you read the [license][license-link].
 
 [vs-download-link]: <https://visualstudio.microsoft.com/downloads/>
-[tg-channel-link]: <https://t.me/aurenex>
 [tsuda-link]: <https://github.com/tsudakageyu>
 [tsuda-project-link]: <https://github.com/tsudakageyu/minhook>
 [jackquelin-site-link]: <http://jacquelin.potier.free.fr>
