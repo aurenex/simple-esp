@@ -54,7 +54,13 @@ Function names, as well as unique parameters, can be obtained by viewing the dec
 - Find the **java minecraft** process.
 - Inject the `simple-esp.dll` into process.
 
-Before use, we strongly recommend that you read the [license][license-link].
+Subscribe to my Telegram [channel][tg-channel-link] or make a donation if you want to support me.
+
+```
+BTC bc1qcmfgc3780pqr4p93t57k76jhy7yttuzc0pc8pv
+ETH 0xa3b829A5D4302De54eE9f3F2cF64409f4D2C1b38
+TON UQAGAeIjsUFmRR4FWs7fRGB6CvU1AzC2q9i58Bw5_nZSp1Af
+```
 
 [vs-download-link]: <https://visualstudio.microsoft.com/downloads/>
 [tsuda-link]: <https://github.com/tsudakageyu>
@@ -62,5 +68,5 @@ Before use, we strongly recommend that you read the [license][license-link].
 [jackquelin-site-link]: <http://jacquelin.potier.free.fr>
 [jackquelin-program-link]: <http://jacquelin.potier.free.fr/winapioverride32>
 [zayats80888-link]: <https://www.cyberforum.ru/members/1417352.html>
-[license-link]: <../master/license.md>
 [specialized-tools-link]: <https://www.khronos.org/opengl/wiki/Debugging_Tools>
+[tg-channel-link]: <https://t.me/aurenex>
